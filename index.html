@@ -1,0 +1,468 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>星屿占卜馆 · 星座运势 / 星盘 / 配对 / 今日星签</title>
+  <meta name="description" content="输入生日，看看星星为你写下的今日注脚。十二星座 · 每日运势 · 双人配对 · 简易星盘 · 今日星签，还能生成分享海报。">
+  <meta name="theme-color" content="#06060f">
+  <meta property="og:title" content="星屿占卜馆 · 把今晚的星星装进你的口袋">
+  <meta property="og:description" content="生日测星座 · 每日运势 · 双人配对 · 简易星盘 · 今日星签，还能生成分享海报。">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="星屿占卜馆">
+  <meta name="twitter:description" content="把今晚的星星装进你的口袋。">
+  <meta name="twitter:image" content="
+  <!-- 已部署到 GitHub Pages：og:image 使用绝对地址，分享卡片可直接显示封面 -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0818'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle' fill='%23f2cf8d'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="src/style.css">
+  <link rel="stylesheet" href="src/style-v1.css">
+</head>
+<body>
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="aurora aurora-a" aria-hidden="true"></div>
+  <div class="aurora aurora-b" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="星屿占卜馆 首页">
+        <span class="brand-spark">✦</span>
+        <span class="brand-name">星屿占卜馆</span>
+        <span class="brand-en">STAR ISLE</span>
+      </a>
+      <nav class="nav-links" aria-label="页面导航">
+        <a href="#reading">星图</a>
+        <a href="#match">配对</a>
+        <a href="#chart">星盘</a>
+        <a href="#oracle">星签</a>
+        <a href="#share">带走</a>
+        <a href="#about">关于</a>
+      </nav>
+      <span class="build-badge"><i></i>星屿 v1.0</span>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div class="hero-orbit orbit-a" aria-hidden="true"></div>
+      <div class="hero-orbit orbit-b" aria-hidden="true"></div>
+      <div class="hero-moon" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="eyebrow">
+          <span class="eyebrow-line"></span>
+          STAR ISLE ORACLE
+          <span class="eyebrow-line"></span>
+        </p>
+        <h1>把今晚的星星<br><em>装进你的口袋</em></h1>
+        <p class="lede">
+          输入生日，让星星替你翻一页今天的答案。<br class="br-lg">
+          十二星座 · 每日星运 · 双人配对 · 简易星盘 · 今日星签，都在岛上等你了。
+        </p>
+
+        <form class="birth-form" id="birthForm" novalidate>
+          <div class="birth-field">
+            <span class="birth-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3.5" y="5" width="17" height="16" rx="3.2"></rect>
+                <path d="M8 3v4M16 3v4M3.5 10h17"></path>
+                <path d="M12 13.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"></path>
+              </svg>
+            </span>
+            <div class="birth-text">
+              <label for="birthday">你的生日</label>
+              <input type="date" id="birthday" name="birthday" min="1900-01-01" autocomplete="bday">
+            </div>
+            <button type="submit" class="btn btn-primary" id="startBtn">
+              开始占卜
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="form-hint">
+            只需要月 / 日，年份不会被记录
+            <span class="dot">·</span>
+            <button type="button" class="link-btn" id="skipBirth">先随便点一颗星星</button>
+          </p>
+        </form>
+
+        <nav class="hero-quick" aria-label="快速跳转">
+          <a href="#reading"><i>01</i>星图</a>
+          <a href="#match"><i>02</i>配对</a>
+          <a href="#chart"><i>03</i>星盘</a>
+          <a href="#oracle"><i>04</i>星签</a>
+          <a href="#share"><i>05</i>带走星星</a>
+        </nav>
+        <div class="hero-meta" aria-label="站点小数据">
+          <span><b>12</b> 星座</span>
+          <i></i>
+          <span><b>365</b> 天星签</span>
+          <i></i>
+          <span><b>本地</b> 生成</span>
+        </div>
+      </div>
+      <a class="scroll-cue" href="#reading" aria-label="进入星图">
+        <span>向下滑动 · 进入星图</span>
+        <i></i>
+      </a>
+    </section>
+
+    <!-- ================= READING ================= -->
+    <section class="section" id="reading">
+      <div class="container">
+        <header class="sec-head">
+          <p class="sec-eyebrow"><span>01</span> 你的星图</p>
+          <h2>星星替你，写好了今天的注脚</h2>
+          <p class="sec-desc">点一颗星星，或者回到上面输入生日。每天的运势由「星座 + 日期」生成，同一天里不会变来变去。想接真实接口的话，点运势卡里的数据源可以切换。</p>
+        </header>
+
+        <div class="reading-grid">
+          <div class="wheel-wrap">
+            <div class="wheel" id="wheel" role="group" aria-label="十二星座选择">
+              <div class="wheel-ring wheel-ring-outer" aria-hidden="true"></div>
+              <div class="wheel-ring wheel-ring-inner" aria-hidden="true"></div>
+              <div class="wheel-spokes" aria-hidden="true"></div>
+              <div class="wheel-aura" aria-hidden="true"></div>
+              <div class="wheel-center" aria-hidden="true">
+                <span class="center-glyph" id="centerGlyph">✦</span>
+                <span class="center-name" id="centerName">星星</span>
+                <span class="center-sub" id="centerSub">今日太阳所在</span>
+              </div>
+              <!-- 12 sign nodes injected by app.js -->
+            </div>
+            <p class="wheel-hint"><span class="pulse-dot"></span>点一颗星星，看它的今日星语</p>
+          </div>
+
+          <article class="read-card" id="readCard" aria-live="polite">
+            <!-- rendered by app.js -->
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MATCH ================= -->
+    <section class="section" id="match">
+      <div class="container">
+        <header class="sec-head sec-head-center">
+          <p class="sec-eyebrow"><span>02</span> 星轨配对</p>
+          <h2>两个人，能不能一起看星星</h2>
+          <p class="sec-desc">选两个星座，看看你们的引力有多大。配对由元素关系 + 星座默契推算，仅供娱乐。</p>
+        </header>
+
+        <div class="match-shell">
+          <div class="match-picker">
+            <label class="pick-card" for="matchYou">
+              <span class="pick-label">你</span>
+              <select id="matchYou" class="sign-select" aria-label="选择你的星座"></select>
+            </label>
+            <button type="button" class="match-swap" id="matchSwap" aria-label="交换位置" title="交换位置">⇄</button>
+            <label class="pick-card" for="matchTa">
+              <span class="pick-label">TA</span>
+              <select id="matchTa" class="sign-select" aria-label="选择对方的星座"></select>
+            </label>
+          </div>
+          <div class="match-result" id="matchResult" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CHART ================= -->
+    <section class="section" id="chart">
+      <div class="container">
+        <header class="sec-head">
+          <p class="sec-eyebrow"><span>03</span> 简易星盘</p>
+          <h2>你的太阳、月亮和上升</h2>
+          <p class="sec-desc">太阳是你本来的样子，月亮是你的情绪底色，上升是别人第一眼看到的你。填上生日、出生时间和出生地，排一张简易小星盘。</p>
+        </header>
+
+        <div class="chart-shell">
+          <form class="chart-form" id="chartForm" novalidate>
+            <div class="chart-form-head">
+              <p class="chart-form-title">输入出生信息</p>
+              <p class="chart-form-sub">时间越准，上升星座越准</p>
+            </div>
+            <div class="chart-fields">
+              <label class="field" for="chartDate">
+                <span>生日</span>
+                <input type="date" id="chartDate" min="1900-01-01" required>
+              </label>
+              <label class="field" for="chartTime">
+                <span>出生时间</span>
+                <input type="time" id="chartTime" value="12:00">
+              </label>
+              <label class="field field-wide" for="chartCity">
+                <span>出生地</span>
+                <select id="chartCity"></select>
+              </label>
+            </div>
+            <div class="chart-manual" id="chartManual" hidden>
+              <label class="field">
+                <span>经度（东经为正）</span>
+                <input type="number" id="chartLon" value="116.41" step="0.01" min="-180" max="180">
+              </label>
+              <label class="field">
+                <span>纬度（北纬为正）</span>
+                <input type="number" id="chartLat" value="39.90" step="0.01" min="-90" max="90">
+              </label>
+            </div>
+            <div class="chart-form-foot">
+              <button type="submit" class="btn btn-primary">排一张小星盘</button>
+              <p class="chart-note">时间按东八区估算。出生时间不确定时，上升星座会不准，可以当作娱乐参考。</p>
+            </div>
+          </form>
+
+          <div class="chart-visual" id="chartVisual"></div>
+          <div class="chart-info" id="chartInfo"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ORACLE ================= -->
+    <section class="section" id="oracle">
+      <div class="container">
+        <header class="sec-head sec-head-center">
+          <p class="sec-eyebrow"><span>04</span> 今日星签</p>
+          <h2>抽一支星星写的签</h2>
+          <p class="sec-desc">签文每天一换。别急着问吉凶，先看看星星想对你说什么。</p>
+        </header>
+
+        <div class="oracle-stage">
+          <div class="flip-card" id="flipCard" role="button" tabindex="0" aria-label="翻开今日星签" aria-pressed="false">
+            <div class="flip-inner">
+              <div class="flip-face flip-front">
+                <svg class="front-map" viewBox="0 0 240 320" fill="none" aria-hidden="true">
+                  <g stroke="rgba(242,207,141,.38)" stroke-width="1">
+                    <path d="M56 78 L118 46 L172 92 L148 152 L84 168 Z"></path>
+                    <path d="M172 92 L196 150 L148 152"></path>
+                    <path d="M84 168 L64 236 L128 268 L196 222 L196 150"></path>
+                    <path d="M128 268 L148 152"></path>
+                  </g>
+                  <g fill="#f2cf8d">
+                    <circle cx="56" cy="78" r="2.6"></circle>
+                    <circle cx="118" cy="46" r="2.2"></circle>
+                    <circle cx="172" cy="92" r="3"></circle>
+                    <circle cx="148" cy="152" r="2.2"></circle>
+                    <circle cx="84" cy="168" r="2.4"></circle>
+                    <circle cx="196" cy="150" r="2"></circle>
+                    <circle cx="64" cy="236" r="2.6"></circle>
+                    <circle cx="128" cy="268" r="2.2"></circle>
+                    <circle cx="196" cy="222" r="2.4"></circle>
+                  </g>
+                  <g fill="rgba(255,255,255,.5)">
+                    <circle cx="40" cy="130" r="1.4"></circle>
+                    <circle cx="210" cy="60" r="1.2"></circle>
+                    <circle cx="188" cy="272" r="1.4"></circle>
+                    <circle cx="92" cy="292" r="1.2"></circle>
+                    <circle cx="28" cy="210" r="1.2"></circle>
+                  </g>
+                </svg>
+                <span class="front-star">✦</span>
+                <p class="front-title">今日星签</p>
+                <p class="front-sub" id="oracleFrontSub">为天秤座准备</p>
+                <span class="front-tap">轻触 · 翻开</span>
+              </div>
+              <div class="flip-face flip-back">
+                <div class="slip" id="oracleSlip">
+                  <!-- rendered by app.js -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="oracle-side">
+            <div class="oracle-note">
+              <p class="oracle-note-title">怎么抽？</p>
+              <p>点一下卡片就能翻开，看完还可以再来一支。签文由当天的星象种子生成——同一天里，同一支签只会出现一次。</p>
+            </div>
+            <div class="oracle-actions">
+              <button class="btn btn-primary" id="drawBtn" type="button">再抽一支</button>
+              <button class="btn btn-ghost" id="toReadingBtn" type="button">回去看运势</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SHARE ================= -->
+    <section class="section" id="share">
+      <div class="container">
+        <header class="sec-head sec-head-center">
+          <p class="sec-eyebrow"><span>05</span> 把星星带走</p>
+          <h2>把今天的好运，发出去</h2>
+          <p class="sec-desc">生成一张今日星语海报，或者给自己设一个每天看星星的提醒。收藏、分享、发朋友圈都可以。</p>
+        </header>
+
+        <div class="share-grid">
+          <article class="share-card">
+            <p class="share-icon">✦</p>
+            <h3>今日星语海报</h3>
+            <p>把星座、运势和今日神谕做成一张 1080×1440 的海报，发朋友圈、发小红书都很合适。</p>
+            <button class="btn btn-primary" id="posterBtn" type="button">生成今日海报</button>
+          </article>
+
+          <article class="share-card">
+            <p class="share-icon">◷</p>
+            <h3>每天提醒我看星星</h3>
+            <p>选一个时间，页面开着时会用浏览器通知提醒你；也可以下载日历文件，导入手机日历每天提醒。</p>
+            <div class="remind-row">
+              <input type="time" id="remindTime" value="21:00" aria-label="提醒时间">
+              <button class="btn btn-sm btn-primary" id="remindBtn" type="button">开启提醒</button>
+            </div>
+            <div class="remind-row">
+              <button class="btn btn-sm btn-ghost" id="icsBtn" type="button">下载日历提醒</button>
+              <button class="btn btn-sm btn-ghost" id="testNotifyBtn" type="button" hidden>测试通知</button>
+            </div>
+            <p class="remind-status" id="remindStatus">未开启 · 浏览器通知需要页面保持打开</p>
+          </article>
+
+          <article class="share-card">
+            <p class="share-icon">↗</p>
+            <h3>分享这个小站</h3>
+            <p>发给朋友，一起看看今天的星星。手机端会调起系统分享，桌面端会复制链接。</p>
+            <button class="btn btn-primary" id="shareBtn" type="button">分享 / 复制链接</button>
+            <p class="share-url" id="shareUrl"></p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ABOUT ================= -->
+    <section class="section" id="about">
+      <div class="container">
+        <header class="sec-head sec-head-center">
+          <p class="sec-eyebrow"><span>06</span> 关于这个测试页</p>
+          <h2>这是一次小小的试航</h2>
+        </header>
+
+        <div class="note-grid">
+          <article class="note-card">
+            <p class="note-no">01</p>
+            <h3>这一版有什么</h3>
+            <ul>
+              <li>生日 → 星座自动换算 + 每日运势</li>
+              <li>双人星座配对评分与相处建议</li>
+              <li>简易星盘：太阳 / 月亮 / 上升</li>
+              <li>今日星签、分享海报、每日提醒</li>
+              <li>本地 / 在线数据源可自由切换</li>
+            </ul>
+          </article>
+          <article class="note-card">
+            <p class="note-no">02</p>
+            <h3>数据与说明</h3>
+            <p>运势与签文为本地算法生成，<b>仅供娱乐</b>，不构成任何建议。星盘为简易估算：月亮黄经误差约 0.1°，上升星座依赖出生时间与地点，仅供参考。</p>
+            <p class="note-links">
+              <a href="https://www.xzw.com/astro/" target="_blank" rel="noreferrer">星座日期参考</a>
+              <a href="https://www.showapi.com/guides/horoscope-quickstart-872" target="_blank" rel="noreferrer">运势字段参考</a>
+            </p>
+          </article>
+          <article class="note-card">
+            <p class="note-no">03</p>
+            <h3>发布小贴士</h3>
+            <p>这是纯静态页面，可直接部署到 GitHub Pages / Vercel。发布后记得把页面里的分享网址和 OG 封面地址换成你的域名，分享卡片更好看。</p>
+            <p class="note-links">
+              <a href="https://github.com/fengsaoyusama/star-oracle" target="_blank" rel="noreferrer">部署说明</a>
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-brand">✦ 星屿占卜馆 <span>STAR ISLE ORACLE</span></p>
+      <p class="footer-note">v1.0 · 占卜内容由本地算法生成，仅供娱乐，不构成任何建议。</p>
+      <p class="footer-whale">由一条爱摸鱼的大肥鱼捏出来的小站 🐋</p>
+    </div>
+  </footer>
+
+  <!-- 移动端底部导航 -->
+  <nav class="tabbar" id="tabbar" aria-label="快捷导航">
+    <a href="#top"><b>✦</b>首页</a>
+    <a href="#reading"><b>◐</b>星图</a>
+    <a href="#match"><b>♡</b>配对</a>
+    <a href="#chart"><b>◎</b>星盘</a>
+    <a href="#share"><b>↗</b>带走</a>
+  </nav>
+
+  <!-- 海报弹窗 -->
+  <div class="modal" id="posterModal" hidden>
+    <div class="modal-backdrop" data-close="poster"></div>
+    <div class="modal-panel is-wide" role="dialog" aria-modal="true" aria-labelledby="posterTitle">
+      <div class="modal-head">
+        <h3 id="posterTitle">分享海报</h3>
+        <button type="button" class="modal-close" data-close="poster" aria-label="关闭">✕</button>
+      </div>
+      <div class="poster-stage">
+        <canvas id="posterCanvas" width="1080" height="1440"></canvas>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-primary" id="posterDownload">保存图片</button>
+        <button type="button" class="btn btn-ghost" data-close="poster">先不保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 数据源弹窗 -->
+  <div class="modal" id="sourceModal" hidden>
+    <div class="modal-backdrop" data-close="source"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="sourceTitle">
+      <div class="modal-head">
+        <h3 id="sourceTitle">数据源设置</h3>
+        <button type="button" class="modal-close" data-close="source" aria-label="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="source-intro">默认使用本地星象算法，离线也能用。想接真实运势接口，就选一个在线源；请求失败会自动回退本地，不会白屏。</p>
+
+        <label class="source-option">
+          <input type="radio" name="sourceProvider" value="local">
+          <span class="so-text"><b>本地星象算法</b><em>推荐 · 无需联网，按「星座 + 日期」生成</em></span>
+        </label>
+
+        <label class="source-option">
+          <input type="radio" name="sourceProvider" value="showapi">
+          <span class="so-text"><b>万维易源 ShowAPI</b><em>需要 AppKey，免费档每天 100 次，数据更「真实」</em></span>
+        </label>
+        <div class="source-config" id="showapiConfig" hidden>
+          <input type="text" id="showapiKey" placeholder="粘贴你的 ShowAPI AppKey" autocomplete="off">
+          <p>AppKey 只保存在你自己的浏览器里。如果浏览器被跨域拦截，会自动回退本地数据。</p>
+        </div>
+
+        <label class="source-option">
+          <input type="radio" name="sourceProvider" value="custom">
+          <span class="so-text"><b>自定义接口</b><em>自己部署的代理 / 自建 API，返回约定 JSON 即可</em></span>
+        </label>
+        <div class="source-config" id="customConfig" hidden>
+          <input type="text" id="customUrl" placeholder="https://your-api.example/horoscope" autocomplete="off">
+          <p>支持 ShowAPI 风格 <code>showapi_res_body.day</code>，或简化字段：overall / love / career / money / luckyColor / luckyNum / luckyTime / luckyDir / luckyStar / notice / tip。</p>
+        </div>
+
+        <p class="source-note">在线数据只补充运势指数与幸运项；宜忌、配对、星签仍由本地生成。接口失败不会影响正常使用。</p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-primary" id="sourceSave">保存并测试</button>
+        <button type="button" class="btn btn-ghost" data-close="source">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <noscript>
+    <div class="noscript">这个页面需要开启 JavaScript 才能占卜哦。请在浏览器设置里允许脚本后再刷新 ✦</div>
+  </noscript>
+
+  <script>window.STAR_ORACLE_CONFIG = { siteUrl: '
+  <script src="src/data.js"></script>
+  <script src="src/astro.js"></script>
+  <script src="src/online.js"></script>
+  <script src="src/poster.js"></script>
+  <script src="src/reminder.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
