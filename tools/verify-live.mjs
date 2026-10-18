@@ -20,6 +20,7 @@ out.twitterImage = (html.match(/name="twitter:image" content="([^"]+)"/) || [])[
 out.siteUrl = (html.match(/siteUrl: '([^']+)'/) || [])[1];
 out.charset = html.includes('charset="utf-8"');
 out.hasAbsoluteOg = (out.ogImage || '').startsWith('https://');
+out.aboutDeployed = html.includes('已经部署在 GitHub Pages 上啦');
 
 for (const path of [
   'src/style.css',
@@ -58,7 +59,9 @@ const problems = [];
 if (out.html.status !== 200) problems.push('首页非 200');
 if (!(out.title || '').includes('星屿占卜馆')) problems.push('标题缺失');
 if (!out.hasAbsoluteOg) problems.push('og:image 不是绝对地址');
+if (out.ogImage !== 'https://fengsaoyusama.github.io/star-oracle/preview/og-cover.png') problems.push('og:image 地址不正确');
 if (out.siteUrl !== 'https://fengsaoyusama.github.io/star-oracle') problems.push('siteUrl 配置不正确');
+if (!out.aboutDeployed) problems.push('关于页仍显示旧的发布提示');
 for (const path of ['src/style.css', 'src/app.js', 'preview/og-cover.png']) {
   if (!out[path] || out[path].status !== 200) problems.push(path + ' 资源异常');
 }
