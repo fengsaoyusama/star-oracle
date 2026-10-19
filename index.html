@@ -1,13 +1,13 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>星屿占卜馆 · 星座运势 / 星盘 / 配对 / 今日星签</title>
-  <meta name="description" content="输入生日，看看星星为你写下的今日注脚。十二星座 · 每日运势 · 双人配对 · 简易星盘 · 今日星签，还能生成分享海报。">
+  <title>星屿占卜馆 · 星座运势 / 爱情财运 / 星盘 / 配对 / 今日星签</title>
+  <meta name="description" content="输入生日，看看星星为你写下的今日注脚。每日运势 · 爱情桃花 · 财运分析 · 双人配对 · 简易星盘 · 今日星签，还能生成分享海报。">
   <meta name="theme-color" content="#06060f">
   <meta property="og:title" content="星屿占卜馆 · 把今晚的星星装进你的口袋">
-  <meta property="og:description" content="生日测星座 · 每日运势 · 双人配对 · 简易星盘 · 今日星签，还能生成分享海报。">
+  <meta property="og:description" content="生日测星座 · 每日运势 · 爱情桃花 · 财运分析 · 双人配对 · 简易星盘 · 今日星签，还能生成分享海报。">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://fengsaoyusama.github.io/star-oracle/preview/og-cover.png">
   <meta property="og:image:width" content="1200">
@@ -36,13 +36,13 @@
       </a>
       <nav class="nav-links" aria-label="页面导航">
         <a href="#reading">星图</a>
+        <a href="#fortune">情财</a>
         <a href="#match">配对</a>
         <a href="#chart">星盘</a>
         <a href="#oracle">星签</a>
         <a href="#share">带走</a>
-        <a href="#about">关于</a>
       </nav>
-      <span class="build-badge"><i></i>星屿 v1.0</span>
+      <span class="build-badge"><i></i>星屿 v1.1</span>
     </div>
   </header>
 
@@ -93,10 +93,11 @@
 
         <nav class="hero-quick" aria-label="快速跳转">
           <a href="#reading"><i>01</i>星图</a>
-          <a href="#match"><i>02</i>配对</a>
-          <a href="#chart"><i>03</i>星盘</a>
-          <a href="#oracle"><i>04</i>星签</a>
-          <a href="#share"><i>05</i>带走星星</a>
+          <a href="#fortune"><i>02</i>爱情财运</a>
+          <a href="#match"><i>03</i>配对</a>
+          <a href="#chart"><i>04</i>星盘</a>
+          <a href="#oracle"><i>05</i>星签</a>
+          <a href="#share"><i>06</i>带走星星</a>
         </nav>
         <div class="hero-meta" aria-label="站点小数据">
           <span><b>12</b> 星座</span>
@@ -145,11 +146,23 @@
       </div>
     </section>
 
+    <!-- ================= LOVE & MONEY ================= -->
+    <section class="section" id="fortune">
+      <div class="container">
+        <header class="sec-head sec-head-center">
+          <p class="sec-eyebrow"><span>02</span> 爱情与财运</p>
+          <h2>桃花和钱包，都替你看好了</h2>
+          <p class="sec-desc">这两块会跟着星图里的星座每天变化：桃花指数、心动/沟通/稳定，正财/偏财/理财，还有每天一换的桃花签和财神签。仅供娱乐，图个开心。</p>
+        </header>
+        <div class="lm-grid" id="lmGrid" aria-live="polite"></div>
+      </div>
+    </section>
+
     <!-- ================= MATCH ================= -->
     <section class="section" id="match">
       <div class="container">
         <header class="sec-head sec-head-center">
-          <p class="sec-eyebrow"><span>02</span> 星轨配对</p>
+          <p class="sec-eyebrow"><span>03</span> 星轨配对</p>
           <h2>两个人，能不能一起看星星</h2>
           <p class="sec-desc">选两个星座，看看你们的引力有多大。配对由元素关系 + 星座默契推算，仅供娱乐。</p>
         </header>
@@ -175,7 +188,7 @@
     <section class="section" id="chart">
       <div class="container">
         <header class="sec-head">
-          <p class="sec-eyebrow"><span>03</span> 简易星盘</p>
+          <p class="sec-eyebrow"><span>04</span> 简易星盘</p>
           <h2>你的太阳、月亮和上升</h2>
           <p class="sec-desc">太阳是你本来的样子，月亮是你的情绪底色，上升是别人第一眼看到的你。填上生日、出生时间和出生地，排一张简易小星盘。</p>
         </header>
@@ -226,7 +239,7 @@
     <section class="section" id="oracle">
       <div class="container">
         <header class="sec-head sec-head-center">
-          <p class="sec-eyebrow"><span>04</span> 今日星签</p>
+          <p class="sec-eyebrow"><span>05</span> 今日星签</p>
           <h2>抽一支星星写的签</h2>
           <p class="sec-desc">签文每天一换。别急着问吉凶，先看看星星想对你说什么。</p>
         </header>
@@ -292,7 +305,7 @@
     <section class="section" id="share">
       <div class="container">
         <header class="sec-head sec-head-center">
-          <p class="sec-eyebrow"><span>05</span> 把星星带走</p>
+          <p class="sec-eyebrow"><span>06</span> 把星星带走</p>
           <h2>把今天的好运，发出去</h2>
           <p class="sec-desc">生成一张今日星语海报，或者给自己设一个每天看星星的提醒。收藏、分享、发朋友圈都可以。</p>
         </header>
@@ -335,7 +348,7 @@
     <section class="section" id="about">
       <div class="container">
         <header class="sec-head sec-head-center">
-          <p class="sec-eyebrow"><span>06</span> 关于这个测试页</p>
+          <p class="sec-eyebrow"><span>07</span> 关于这个测试页</p>
           <h2>这是一次小小的试航</h2>
         </header>
 
@@ -345,6 +358,7 @@
             <h3>这一版有什么</h3>
             <ul>
               <li>生日 → 星座自动换算 + 每日运势</li>
+              <li>爱情运势 / 财运分析（桃花签 · 财神签）</li>
               <li>双人星座配对评分与相处建议</li>
               <li>简易星盘：太阳 / 月亮 / 上升</li>
               <li>今日星签、分享海报、每日提醒</li>
@@ -377,17 +391,18 @@
   <footer class="footer">
     <div class="footer-inner">
       <p class="footer-brand">✦ 星屿占卜馆 <span>STAR ISLE ORACLE</span></p>
-      <p class="footer-note">v1.0 · 占卜内容由本地算法生成，仅供娱乐，不构成任何建议。</p>
+      <p class="footer-note">v1.1 · 占卜内容由本地算法生成，仅供娱乐，不构成任何建议。</p>
       <p class="footer-whale">由一条爱摸鱼的大肥鱼捏出来的小站 🐋</p>
     </div>
   </footer>
 
   <!-- 移动端底部导航 -->
   <nav class="tabbar" id="tabbar" aria-label="快捷导航">
-    <a href="#top"><b>✦</b>首页</a>
     <a href="#reading"><b>◐</b>星图</a>
-    <a href="#match"><b>♡</b>配对</a>
+    <a href="#fortune"><b>♡</b>情财</a>
+    <a href="#match"><b>∞</b>配对</a>
     <a href="#chart"><b>◎</b>星盘</a>
+    <a href="#oracle"><b>✦</b>星签</a>
     <a href="#share"><b>↗</b>带走</a>
   </nav>
 
@@ -460,6 +475,7 @@
 
   <script>window.STAR_ORACLE_CONFIG = { siteUrl: 'https://fengsaoyusama.github.io/star-oracle' };</script>
   <script src="src/data.js"></script>
+  <script src="src/lm-data.js"></script>
   <script src="src/astro.js"></script>
   <script src="src/online.js"></script>
   <script src="src/poster.js"></script>

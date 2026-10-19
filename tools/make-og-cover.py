@@ -1,4 +1,4 @@
-"""生成 1200x630 的社交分享封面（OG image）"""
+﻿"""生成 1200x630 的社交分享封面（OG image）"""
 import math
 import random
 
@@ -105,8 +105,8 @@ def main():
     d.text((70, 252), "装进你的口袋", font=title_font, fill=GOLD)
 
     line_font = ImageFont.truetype(FONT_MSYH, 23)
-    d.text((72, 366), "生日测星座 · 每日运势 · 双人配对", font=line_font, fill=MUTED)
-    d.text((72, 404), "简易星盘 · 今日星签 · 分享海报", font=line_font, fill=MUTED)
+    d.text((72, 366), "每日运势 · 爱情桃花 · 财运分析", font=line_font, fill=MUTED)
+    d.text((72, 404), "双人配对 · 简易星盘 · 今日星签", font=line_font, fill=MUTED)
 
     d.line((72, 456, 640, 456), fill=(242, 207, 141, 90), width=1)
 

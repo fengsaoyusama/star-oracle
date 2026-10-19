@@ -6,9 +6,10 @@
   const bar = q('#tabbar');
 
   check('手机底栏显示', getComputedStyle(bar).display === 'flex');
-  check('底栏 5 个入口', bar.querySelectorAll('a').length === 5);
+  check('底栏 6 个入口', bar.querySelectorAll('a').length === 6);
+  check('底栏含情财入口', !!bar.querySelector('a[href="#fortune"]'));
   const r = bar.getBoundingClientRect();
-  check('底栏宽度合理', r.width > 260 && r.width < 390, Math.round(r.width));
+  check('底栏宽度合理', r.width > 230 && r.width < 390, Math.round(r.width));
   check('底栏文字单行', getComputedStyle(bar.querySelector('a')).whiteSpace === 'nowrap');
 
   bar.querySelector('a[href="#chart"]').click();

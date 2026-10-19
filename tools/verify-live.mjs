@@ -21,17 +21,22 @@ out.siteUrl = (html.match(/siteUrl: '([^']+)'/) || [])[1];
 out.charset = html.includes('charset="utf-8"');
 out.hasAbsoluteOg = (out.ogImage || '').startsWith('https://');
 out.aboutDeployed = html.includes('已经部署在 GitHub Pages 上啦');
+out.hasLoveMoney = html.includes('id="fortune"') && html.includes('id="lmGrid"');
+out.badge = html.includes('星屿 v1.1');
+out.titleV11 = (out.title || '').includes('爱情财运');
 
 for (const path of [
   'src/style.css',
   'src/style-v1.css',
   'src/app.js',
   'src/data.js',
+  'src/lm-data.js',
   'src/astro.js',
   'src/online.js',
   'src/poster.js',
   'src/reminder.js',
   'preview/og-cover.png',
+  'preview/fortune.png',
   'preview/poster-daily.png',
   'README.md',
   '.nojekyll'
@@ -62,7 +67,10 @@ if (!out.hasAbsoluteOg) problems.push('og:image 不是绝对地址');
 if (out.ogImage !== 'https://fengsaoyusama.github.io/star-oracle/preview/og-cover.png') problems.push('og:image 地址不正确');
 if (out.siteUrl !== 'https://fengsaoyusama.github.io/star-oracle') problems.push('siteUrl 配置不正确');
 if (!out.aboutDeployed) problems.push('关于页仍显示旧的发布提示');
-for (const path of ['src/style.css', 'src/app.js', 'preview/og-cover.png']) {
+if (!out.hasLoveMoney) problems.push('线上页面缺少爱情与财运板块');
+if (!out.badge) problems.push('线上版本徽标不是 v1.1');
+if (!out.titleV11) problems.push('标题未包含爱情财运');
+for (const path of ['src/style.css', 'src/app.js', 'src/lm-data.js', 'preview/og-cover.png', 'preview/fortune.png']) {
   if (!out[path] || out[path].status !== 200) problems.push(path + ' 资源异常');
 }
 if (out.notFound !== 404) problems.push('404 状态异常: ' + out.notFound);

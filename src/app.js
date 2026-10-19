@@ -1,8 +1,8 @@
 ﻿/* ============================================================
-   星屿占卜馆 v1.0 · 交互逻辑
+   星屿占卜馆 v1.1 · 交互逻辑
    - 生日 → 星座换算
    - 「星座 + 日期」种子随机 → 每日运势（本地 / 在线源可切换）
-   - 星座轮盘、双人配对、简易星盘、今日星签
+   - 星座轮盘、爱情运势、财运分析、双人配对、简易星盘、今日星签
    - 分享海报、每日提醒、日历文件
    ============================================================ */
 (function () {
@@ -14,6 +14,10 @@
   var ELEMENTS = DATA.elements;
   var ORACLE = DATA.oracle;
   var PROFILES = DATA.profiles || {};
+  var LM = DATA.loveMoney || {
+    love: { styles: {}, advice: { single: [], taken: [] }, quotes: [], dos: [], donts: [], colors: [], oracle: [] },
+    money: { styles: {}, advice: [], avoid: [], colors: [], numbers: [], oracle: [] }
+  };
   var PAIRING = DATA.pairing;
   var Astro = window.StarAstro;
   var Online = window.StarOnline;
@@ -47,6 +51,15 @@
     onlineStatus: 'local', // local | loading | online | failed
     onlineToken: 0,
     onlineRetryAt: 0,
+    relationship: 'single', // single | taken
+    loveOracle: null,
+    moneyOracle: null,
+    loveSalt: 0,
+    moneySalt: 0,
+    loveDrawn: [],
+    moneyDrawn: [],
+    loveFortune: null,
+    moneyFortune: null,
     match: null,
     chart: null,
     chartLabel: '',
@@ -55,6 +68,9 @@
   };
 
   var MOOD = { high: '顺风局', mid: '平稳局', low: '充电局' };
+  var LOVE_MOOD = { high: '桃花正旺', mid: '心动酝酿', low: '先爱自己' };
+  var MONEY_MOOD = { high: '财运上扬', mid: '稳中有进', low: '守财为上' };
+  var RELATIONSHIP_KEY = 'star-oracle-relationship';
 
   /* ============================================================
      日期
@@ -238,6 +254,272 @@
   }
 
   /* ============================================================
+     爱情运势 / 财运分析
+     ============================================================ */
+  function loadRelationship() {
+    try {
+      var value = window.localStorage && window.localStorage.getItem(RELATIONSHIP_KEY);
+      return value === 'taken' ? 'taken' : 'single';
+    } catch (err) {
+      return 'single';
+    }
+  }
+
+  function saveRelationship(value) {
+    try {
+      window.localStorage.setItem(RELATIONSHIP_KEY, value);
+    } catch (err) { /* ignore */ }
+  }
+
+  function pickOracleFrom(pool, parts, drawn) {
+    var rng = rngFor.apply(null, parts);
+    var index = Math.floor(rng() * pool.length) % pool.length;
+    if (drawn && drawn.length < pool.length && drawn.indexOf(index) !== -1) {
+      for (var step = 1; step <= pool.length; step++) {
+        var next = (index + step) % pool.length;
+        if (drawn.indexOf(next) === -1) { index = next; break; }
+      }
+    }
+    return {
+      index: index,
+      text: pool[index].text,
+      tag: pool[index].tag,
+      no: 1 + Math.floor(rng() * 99)
+    };
+  }
+
+  function drawLoveOracle(sign, salt) {
+    return pickOracleFrom(LM.love.oracle, ['love-oracle', sign.id, dateKey(), String(salt)], state.loveDrawn);
+  }
+
+  function drawMoneyOracle(sign, salt) {
+    return pickOracleFrom(LM.money.oracle, ['money-oracle', sign.id, dateKey(), String(salt)], state.moneyDrawn);
+  }
+
+  function buildLoveFortune(sign) {
+    var rng = rngFor('love', sign.id, dateKey());
+    var heart = 2 + Math.floor(rng() * 4);
+    var talk = 2 + Math.floor(rng() * 4);
+    var stable = 2 + Math.floor(rng() * 4);
+    var score = clamp(52 + Math.round((heart + talk + stable) / 15 * 40) + (Math.floor(rng() * 7) - 3), 56, 99);
+    var tier = score >= 85 ? 'high' : score >= 72 ? 'mid' : 'low';
+    var advicePool = LM.love.advice[state.relationship] || LM.love.advice.single || [];
+    var soul = signById(pick(rng, sign.best));
+    return {
+      score: score,
+      tier: tier,
+      mood: LOVE_MOOD[tier],
+      heart: heart,
+      talk: talk,
+      stable: stable,
+      style: LM.love.styles[sign.id] || '',
+      advice: pick(rng, advicePool),
+      quote: pick(rng, LM.love.quotes),
+      dos: pickN(rng, LM.love.dos, 2),
+      donts: pickN(rng, LM.love.donts, 1),
+      luckyColor: pick(rng, LM.love.colors),
+      direction: pick(rng, LUCKY.directions),
+      luckyTime: pick(rng, LUCKY.times),
+      soulSign: soul ? soul.name : '—',
+      oracle: state.loveOracle
+    };
+  }
+
+  function buildMoneyFortune(sign) {
+    var rng = rngFor('money', sign.id, dateKey());
+    var main = 2 + Math.floor(rng() * 4);
+    var side = 2 + Math.floor(rng() * 4);
+    var invest = 2 + Math.floor(rng() * 4);
+    var score = clamp(52 + Math.round((main + side + invest) / 15 * 40) + (Math.floor(rng() * 7) - 3), 56, 99);
+    var tier = score >= 85 ? 'high' : score >= 72 ? 'mid' : 'low';
+    return {
+      score: score,
+      tier: tier,
+      mood: MONEY_MOOD[tier],
+      main: main,
+      side: side,
+      invest: invest,
+      style: LM.money.styles[sign.id] || '',
+      advice: pickN(rng, LM.money.advice, 2),
+      avoid: pickN(rng, LM.money.avoid, 2),
+      luckyColor: pick(rng, LM.money.colors),
+      direction: pick(rng, LUCKY.directions),
+      luckyTime: pick(rng, LUCKY.times),
+      number: pick(rng, LM.money.numbers),
+      oracle: state.moneyOracle
+    };
+  }
+
+  function lovePanelHtml(sign, f) {
+    var color = f.luckyColor;
+    var statusHtml =
+      '<div class="lm-status" role="group" aria-label="感情状态">' +
+        '<button type="button" data-lm-action="status" data-status="single" class="' + (state.relationship === 'single' ? 'is-active' : '') + '">单身</button>' +
+        '<button type="button" data-lm-action="status" data-status="taken" class="' + (state.relationship === 'taken' ? 'is-active' : '') + '">有伴</button>' +
+      '</div>';
+
+    return '<article class="lm-card lm-love">' +
+      '<div class="lm-head">' +
+        '<div class="lm-icon" aria-hidden="true">♡</div>' +
+        '<div class="lm-title">' +
+          '<p class="lm-eyebrow">爱情运势 · ' + dateText() + ' · ' + sign.name + '</p>' +
+          '<h3>桃花与心动</h3>' +
+        '</div>' +
+        '<div class="lm-score">' +
+          '<div class="score-ring" id="loveRing" style="--pct:0"><span class="score-num">' + f.score + '</span></div>' +
+          '<span class="score-label">桃花指数</span>' +
+          '<span class="lm-mood">' + f.mood + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<p class="lm-style">' + f.style + '</p>' +
+      statusHtml +
+      '<div class="star-rows">' +
+        starRow('心动', f.heart) +
+        starRow('沟通', f.talk) +
+        starRow('稳定', f.stable) +
+      '</div>' +
+      '<div class="lm-lucky">' +
+        luckyItem('桃花方位', f.direction) +
+        luckyItem('桃花色', '<i class="swatch" style="--sw:' + color.hex + '"></i>' + color.name) +
+        luckyItem('缘分星座', f.soulSign) +
+        luckyItem('心动时辰', f.luckyTime) +
+      '</div>' +
+      '<div class="lm-block">' +
+        '<p class="lm-block-title">今天怎么靠近爱情</p>' +
+        '<p class="lm-block-text">' + f.advice + '</p>' +
+      '</div>' +
+      '<div class="yiji">' +
+        '<div class="yiji-item yi"><span class="yiji-tag">宜</span><span class="yiji-text">' + f.dos.join(' · ') + '</span></div>' +
+        '<div class="yiji-item ji"><span class="yiji-tag">忌</span><span class="yiji-text">' + f.donts.join(' · ') + '</span></div>' +
+      '</div>' +
+      '<p class="lm-quote">“' + f.quote + '”</p>' +
+      '<div class="lm-oracle">' +
+        '<div class="lm-oracle-head">' +
+          '<span>桃花签<em>' + f.oracle.tag + '</em></span>' +
+          '<button type="button" data-lm-action="love-oracle">换一支</button>' +
+        '</div>' +
+        '<p class="lm-oracle-text">' + f.oracle.text + '</p>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function moneyPanelHtml(sign, f) {
+    var color = f.luckyColor;
+    return '<article class="lm-card lm-money">' +
+      '<div class="lm-head">' +
+        '<div class="lm-icon" aria-hidden="true">✦</div>' +
+        '<div class="lm-title">' +
+          '<p class="lm-eyebrow">财运分析 · ' + dateText() + ' · ' + sign.name + '</p>' +
+          '<h3>搞钱与守财</h3>' +
+        '</div>' +
+        '<div class="lm-score">' +
+          '<div class="score-ring" id="moneyRing" style="--pct:0"><span class="score-num">' + f.score + '</span></div>' +
+          '<span class="score-label">财运指数</span>' +
+          '<span class="lm-mood">' + f.mood + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<p class="lm-style">' + f.style + '</p>' +
+      '<div class="star-rows">' +
+        starRow('正财', f.main) +
+        starRow('偏财', f.side) +
+        starRow('理财', f.invest) +
+      '</div>' +
+      '<div class="lm-lucky">' +
+        luckyItem('财神方位', f.direction) +
+        luckyItem('招财色', '<i class="swatch" style="--sw:' + color.hex + '"></i>' + color.name) +
+        luckyItem('幸运数字', f.number) +
+        luckyItem('进财吉时', f.luckyTime) +
+      '</div>' +
+      '<div class="lm-block">' +
+        '<p class="lm-block-title">搞钱建议</p>' +
+        '<ul class="lm-list">' + f.advice.map(function (item) { return '<li>' + item + '</li>'; }).join('') + '</ul>' +
+      '</div>' +
+      '<div class="lm-block">' +
+        '<p class="lm-block-title">避坑提醒</p>' +
+        '<ul class="lm-list is-warn">' + f.avoid.map(function (item) { return '<li>' + item + '</li>'; }).join('') + '</ul>' +
+      '</div>' +
+      '<div class="lm-oracle">' +
+        '<div class="lm-oracle-head">' +
+          '<span>财神签<em>' + f.oracle.tag + '</em></span>' +
+          '<button type="button" data-lm-action="money-oracle">换一支</button>' +
+        '</div>' +
+        '<p class="lm-oracle-text">' + f.oracle.text + '</p>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function renderLoveMoney() {
+    var grid = $('#lmGrid');
+    var sign = signById(state.signId);
+    if (!grid || !sign) return;
+
+    if (!state.loveOracle) {
+      state.loveOracle = drawLoveOracle(sign, 0);
+      state.loveDrawn.push(state.loveOracle.index);
+    }
+    if (!state.moneyOracle) {
+      state.moneyOracle = drawMoneyOracle(sign, 0);
+      state.moneyDrawn.push(state.moneyOracle.index);
+    }
+
+    var love = buildLoveFortune(sign);
+    var money = buildMoneyFortune(sign);
+    state.loveFortune = love;
+    state.moneyFortune = money;
+
+    grid.innerHTML = lovePanelHtml(sign, love) + moneyPanelHtml(sign, money);
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var loveRing = $('#loveRing');
+        var moneyRing = $('#moneyRing');
+        if (loveRing) loveRing.style.setProperty('--pct', String(love.score));
+        if (moneyRing) moneyRing.style.setProperty('--pct', String(money.score));
+      });
+    });
+  }
+
+  function initLoveMoney() {
+    var grid = $('#lmGrid');
+    if (!grid) return;
+    state.relationship = loadRelationship();
+
+    grid.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-lm-action]');
+      if (!btn) return;
+      var sign = signById(state.signId);
+      if (!sign) return;
+      var action = btn.dataset.lmAction;
+
+      if (action === 'status') {
+        var next = btn.dataset.status === 'taken' ? 'taken' : 'single';
+        if (next === state.relationship) return;
+        state.relationship = next;
+        saveRelationship(next);
+        renderLoveMoney();
+        return;
+      }
+      if (action === 'love-oracle') {
+        state.loveSalt += 1;
+        state.loveOracle = drawLoveOracle(sign, state.loveSalt);
+        state.loveDrawn.push(state.loveOracle.index);
+        if (state.loveDrawn.length > LM.love.oracle.length) state.loveDrawn = state.loveDrawn.slice(-LM.love.oracle.length);
+        renderLoveMoney();
+        return;
+      }
+      if (action === 'money-oracle') {
+        state.moneySalt += 1;
+        state.moneyOracle = drawMoneyOracle(sign, state.moneySalt);
+        state.moneyDrawn.push(state.moneyOracle.index);
+        if (state.moneyDrawn.length > LM.money.oracle.length) state.moneyDrawn = state.moneyDrawn.slice(-LM.money.oracle.length);
+        renderLoveMoney();
+      }
+    });
+
+    renderLoveMoney();
+  }
+
+  /* ============================================================
      渲染：星座轮盘
      ============================================================ */
   function buildWheel() {
@@ -380,6 +662,7 @@
           starRow('事业', f.career) +
           starRow('财运', f.money) +
         '</div>' +
+        '<button type="button" class="lm-detail-link" data-action="lm">想看今天的桃花和财运 →</button>' +
         '<div class="lucky-grid">' +
           luckyItem('幸运色', '<i class="swatch" style="--sw:' + f.luckyColor.hex + '"></i>' + f.luckyColor.name) +
           luckyItem('幸运数字', f.luckyNum) +
@@ -439,11 +722,18 @@
     state.drawn = [];
     state.flipped = false;
     state.onlineStatus = 'local';
+    state.loveOracle = null;
+    state.moneyOracle = null;
+    state.loveSalt = 0;
+    state.moneySalt = 0;
+    state.loveDrawn = [];
+    state.moneyDrawn = [];
     if (mode === 'birthday' && opts && opts.label) state.birthLabel = opts.label;
 
     updateWheel();
     renderReading();
     renderOracle(true);
+    renderLoveMoney();
     syncMatchYou();
     refreshOnlineFortune(id);
 
@@ -1401,7 +1691,7 @@
     var bar = $('#tabbar');
     if (!bar) return;
     var links = $$('a', bar);
-    var ids = ['top', 'reading', 'match', 'chart', 'oracle', 'share'];
+    var ids = ['reading', 'fortune', 'match', 'chart', 'oracle', 'share'];
     var sections = ids.map(function (id) { return document.getElementById(id); }).filter(Boolean);
 
     var update = function () {
@@ -1412,7 +1702,6 @@
         if (top <= marker) current = sec;
       });
       var hash = '#' + current.id;
-      if (hash === '#oracle') hash = '#share';
       links.forEach(function (a) {
         a.classList.toggle('is-active', a.getAttribute('href') === hash);
       });
@@ -1480,6 +1769,10 @@
         if (action === 'copy') copyFortune();
         if (action === 'source') openSourceModal();
         if (action === 'poster') openPoster('daily');
+        if (action === 'lm') {
+          var fortuneSection = $('#fortune');
+          if (fortuneSection) fortuneSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         if (action === 'draw') {
           var oracleSection = $('#oracle');
           if (oracleSection) oracleSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1536,6 +1829,7 @@
     initShare();
     bindModals();
     initTabbar();
+    initLoveMoney();
 
     var today = getToday();
     var sunSign = getSignByMd(today.m, today.d);
@@ -1561,6 +1855,9 @@
     getSourceSettings: getSourceSettings,
     saveSourceSettings: saveSourceSettings,
     renderMatch: renderMatch,
-    renderReading: renderReading
+    renderReading: renderReading,
+    renderLoveMoney: renderLoveMoney,
+    buildLoveFortune: buildLoveFortune,
+    buildMoneyFortune: buildMoneyFortune
   };
 })();

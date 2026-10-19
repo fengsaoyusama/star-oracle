@@ -1,4 +1,4 @@
-// cdp-shot.mjs — 通过 Chrome DevTools Protocol 截图 / 执行页面脚本（无需 puppeteer）
+﻿// cdp-shot.mjs — 通过 Chrome DevTools Protocol 截图 / 执行页面脚本（无需 puppeteer）
 // 用法: node tools/cdp-shot.mjs <url> <out.png> [w] [h] [waitMs] [dpr] [evalFile] [waitAfterMs] [full]
 //   先运行 tools/browser-start.ps1 启动无头 Edge（CDP 端口 9223）
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -85,6 +85,9 @@ const page = {
 
 await page.send('Page.enable');
 await page.send('Runtime.enable');
+await page.send('Network.enable');
+await page.send('Network.setCacheDisabled', { cacheDisabled: true });
+await page.send('Emulation.setLocaleOverride', { locale: 'zh-CN' });
 await page.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: dpr, mobile: false });
 await page.send('Page.navigate', { url });
 await sleep(waitMs);
