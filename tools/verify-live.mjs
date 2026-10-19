@@ -1,4 +1,4 @@
-﻿// 验证 GitHub Pages 线上站点
+// 验证 GitHub Pages 线上站点
 const BASE = 'https://fengsaoyusama.github.io/star-oracle/';
 
 async function get(path) {
@@ -21,10 +21,11 @@ out.siteUrl = (html.match(/siteUrl: '([^']+)'/) || [])[1];
 out.charset = html.includes('charset="utf-8"');
 out.hasAbsoluteOg = (out.ogImage || '').startsWith('https://');
 out.aboutPublic = html.includes('关于星屿') && html.includes('使用小贴士');
-out.noDevCard = !html.includes('发布小贴士') && !html.includes('siteUrl');
+out.noDevCard = !html.includes('发布小贴士') && !html.includes('部署脚本');
 out.hasLoveMoney = html.includes('id="fortune"') && html.includes('id="lmGrid"');
-out.badge = html.includes('星屿 v1.1');
+out.badge = html.includes('星屿 v1.2');
 out.titleV11 = (out.title || '').includes('爱情财运');
+out.hasCityPicker = html.includes('id="chartCityInput"') && html.includes('src/city-data.js') && html.includes('按出生地时区估算');
 
 for (const path of [
   'src/style.css',
@@ -32,12 +33,14 @@ for (const path of [
   'src/app.js',
   'src/data.js',
   'src/lm-data.js',
+  'src/city-data.js',
   'src/astro.js',
   'src/online.js',
   'src/poster.js',
   'src/reminder.js',
   'preview/og-cover.png',
   'preview/fortune.png',
+  'preview/city-search.png',
   'preview/poster-daily.png',
   'README.md',
   '.nojekyll'
@@ -70,9 +73,10 @@ if (out.siteUrl !== 'https://fengsaoyusama.github.io/star-oracle') problems.push
 if (!out.aboutPublic) problems.push('关于区仍是旧的访客文案');
 if (!out.noDevCard) problems.push('页面仍包含站长专用提示');
 if (!out.hasLoveMoney) problems.push('线上页面缺少爱情与财运板块');
-if (!out.badge) problems.push('线上版本徽标不是 v1.1');
+if (!out.badge) problems.push('线上版本徽标不是 v1.2');
 if (!out.titleV11) problems.push('标题未包含爱情财运');
-for (const path of ['src/style.css', 'src/app.js', 'src/lm-data.js', 'preview/og-cover.png', 'preview/fortune.png']) {
+if (!out.hasCityPicker) problems.push('线上页面缺少全国城市搜索');
+for (const path of ['src/style.css', 'src/app.js', 'src/lm-data.js', 'src/city-data.js', 'preview/og-cover.png', 'preview/fortune.png']) {
   if (!out[path] || out[path].status !== 200) problems.push(path + ' 资源异常');
 }
 if (out.notFound !== 404) problems.push('404 状态异常: ' + out.notFound);

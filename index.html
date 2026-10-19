@@ -42,7 +42,7 @@
         <a href="#oracle">星签</a>
         <a href="#share">带走</a>
       </nav>
-      <span class="build-badge"><i></i>星屿 v1.1</span>
+      <span class="build-badge"><i></i>星屿 v1.2</span>
     </div>
   </header>
 
@@ -190,7 +190,7 @@
         <header class="sec-head">
           <p class="sec-eyebrow"><span>04</span> 简易星盘</p>
           <h2>你的太阳、月亮和上升</h2>
-          <p class="sec-desc">太阳是你本来的样子，月亮是你的情绪底色，上升是别人第一眼看到的你。填上生日、出生时间和出生地，排一张简易小星盘。</p>
+          <p class="sec-desc">太阳是你本来的样子，月亮是你的情绪底色，上升是别人第一眼看到的你。填上生日、出生时间和出生地（全国 370+ 城市搜索，或手动输入经纬度），排一张简易小星盘。</p>
         </header>
 
         <div class="chart-shell">
@@ -208,10 +208,14 @@
                 <span>出生时间</span>
                 <input type="time" id="chartTime" value="12:00">
               </label>
-              <label class="field field-wide" for="chartCity">
-                <span>出生地</span>
-                <select id="chartCity"></select>
-              </label>
+              <div class="field field-wide city-field">
+                <label for="chartCityInput">出生地</label>
+                <div class="city-picker">
+                  <input type="text" id="chartCityInput" placeholder="搜索城市，如 成都 / 乌鲁木齐 / 香港" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="cityDropdown" aria-autocomplete="list">
+                  <div class="city-dropdown" id="cityDropdown" role="listbox" hidden></div>
+                </div>
+                <button type="button" class="city-manual-link" id="cityManualBtn">找不到城市？手动输入经纬度</button>
+              </div>
             </div>
             <div class="chart-manual" id="chartManual" hidden>
               <label class="field">
@@ -225,7 +229,7 @@
             </div>
             <div class="chart-form-foot">
               <button type="submit" class="btn btn-primary">排一张小星盘</button>
-              <p class="chart-note">时间按东八区估算。出生时间不确定时，上升星座会不准，可以当作娱乐参考。</p>
+              <p class="chart-note">时间按出生地时区估算（中国城市为 UTC+8，海外城市未考虑历史夏令时）。出生时间不确定时，上升星座会不准，可以当作娱乐参考。</p>
             </div>
           </form>
 
@@ -392,7 +396,7 @@
   <footer class="footer">
     <div class="footer-inner">
       <p class="footer-brand">✦ 星屿占卜馆 <span>STAR ISLE ORACLE</span></p>
-      <p class="footer-note">v1.1 · 占卜内容由本地算法生成，仅供娱乐，不构成任何建议。</p>
+      <p class="footer-note">v1.2 · 占卜内容由本地算法生成，仅供娱乐，不构成任何建议。</p>
       <p class="footer-whale">由一条爱摸鱼的大肥鱼捏出来的小站 🐋</p>
     </div>
   </footer>
@@ -477,6 +481,7 @@
   <script>window.STAR_ORACLE_CONFIG = { siteUrl: 'https://fengsaoyusama.github.io/star-oracle' };</script>
   <script src="src/data.js"></script>
   <script src="src/lm-data.js"></script>
+  <script src="src/city-data.js"></script>
   <script src="src/astro.js"></script>
   <script src="src/online.js"></script>
   <script src="src/poster.js"></script>

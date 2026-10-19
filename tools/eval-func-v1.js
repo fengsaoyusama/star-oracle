@@ -57,8 +57,21 @@
   /* ---------- 星盘 ---------- */
   q('#chartDate').value = '2000-01-01';
   q('#chartTime').value = '12:00';
-  q('#chartCity').value = '0';
-  q('#chartCity').dispatchEvent(new Event('change', { bubbles: true }));
+
+  function pickCity(name) {
+    const input = q('#chartCityInput');
+    input.focus();
+    input.value = name;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return new Promise((resolve) => setTimeout(() => {
+      const option = [...document.querySelectorAll('#cityDropdown .city-option')].find((o) => o.textContent.includes(name));
+      if (option) option.click();
+      resolve(!!option);
+    }, 160));
+  }
+
+  const picked = await pickCity('北京');
+  check('城市搜索选中北京', picked && q('#chartCityInput').value === '北京', q('#chartCityInput').value);
   q('#chartForm').requestSubmit();
   await sleep(350);
   const titles = [...document.querySelectorAll('.cc-title b')].map((b) => b.textContent);
@@ -68,13 +81,16 @@
   check('元素分布四格', document.querySelectorAll('.eb-item').length === 4);
   check('星盘 meta 正确', (text('.chart-meta') || '').indexOf('2000.01.01 12:00') === 0, text('.chart-meta'));
 
-  q('#chartCity').value = '-1';
-  q('#chartCity').dispatchEvent(new Event('change', { bubbles: true }));
+  q('#cityManualBtn').click();
   await sleep(120);
   check('手动经纬度展开', !q('#chartManual').hidden);
-  q('#chartCity').value = '0';
-  q('#chartCity').dispatchEvent(new Event('change', { bubbles: true }));
-  await sleep(120);
+  q('#chartCityInput').focus();
+  q('#chartCityInput').value = '上海';
+  q('#chartCityInput').dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(160);
+  const sh = [...document.querySelectorAll('#cityDropdown .city-option')].find((o) => o.textContent.includes('上海'));
+  if (sh) sh.click();
+  await sleep(150);
   check('手动经纬度收起', q('#chartManual').hidden);
 
   /* ---------- 海报 ---------- */

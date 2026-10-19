@@ -1,8 +1,8 @@
 ﻿/* ============================================================
-   星屿占卜馆 v1.1 · 交互逻辑
+   星屿占卜馆 v1.2 · 交互逻辑
    - 生日 → 星座换算
    - 「星座 + 日期」种子随机 → 每日运势（本地 / 在线源可切换）
-   - 星座轮盘、爱情运势、财运分析、双人配对、简易星盘、今日星签
+   - 星座轮盘、爱情运势、财运分析、双人配对、简易星盘（全国城市库）、今日星签
    - 分享海报、每日提醒、日历文件
    ============================================================ */
 (function () {
@@ -64,6 +64,10 @@
     chart: null,
     chartLabel: '',
     chartReady: false,
+    chartCity: null,
+    cityManual: false,
+    cityMatches: [],
+    cityActiveIndex: -1,
     posterMode: 'daily'
   };
 
@@ -1007,26 +1011,182 @@
   /* ============================================================
      简易星盘
      ============================================================ */
+  function getCityList() {
+    var list = (window.STAR_CITIES && window.STAR_CITIES.length) ? window.STAR_CITIES : (Astro && Astro.CITIES);
+    return (list || []).map(function (c) {
+      return {
+        name: c.name,
+        full: c.full || c.name,
+        province: c.province || '',
+        lon: c.lon,
+        lat: c.lat,
+        tz: c.tz == null ? 8 : c.tz
+      };
+    });
+  }
+
+  var CITY_HOT = ['北京', '上海', '广州', '深圳', '成都', '杭州', '武汉', '西安', '重庆', '南京'];
+
+  function findCityByShort(name) {
+    var list = getCityList();
+    for (var i = 0; i < list.length; i++) if (list[i].name === name) return list[i];
+    return null;
+  }
+
+  function renderCityOptions(keyword) {
+    var dropdown = $('#cityDropdown');
+    var input = $('#chartCityInput');
+    if (!dropdown || !input) return;
+    var q = (keyword || '').trim();
+    var list = getCityList();
+    var matches;
+    if (!q) {
+      matches = CITY_HOT.map(findCityByShort).filter(Boolean);
+    } else {
+      matches = list.filter(function (c) {
+        return c.name.indexOf(q) !== -1 || c.full.indexOf(q) !== -1 || (c.province && c.province.indexOf(q) !== -1);
+      });
+      matches.sort(function (a, b) {
+        var ai = a.name.indexOf(q) === 0 ? 0 : 1;
+        var bi = b.name.indexOf(q) === 0 ? 0 : 1;
+        if (ai !== bi) return ai - bi;
+        if (a.name.length !== b.name.length) return a.name.length - b.name.length;
+        return a.province.localeCompare(b.province, 'zh-Hans-CN');
+      });
+      matches = matches.slice(0, 60);
+    }
+    state.cityMatches = matches;
+    state.cityActiveIndex = matches.length ? 0 : -1;
+    dropdown.innerHTML = matches.length
+      ? matches.map(function (c, i) {
+          return '<button type="button" class="city-option' + (i === 0 ? ' is-active' : '') + '" role="option" data-city-index="' + i + '" aria-selected="' + (i === 0 ? 'true' : 'false') + '">' +
+            '<span class="city-option-name">' + c.name + '</span>' +
+            '<span class="city-option-meta">' + c.province + '</span>' +
+            '</button>';
+        }).join('')
+      : '<p class="city-empty">没找到这个城市，可以点下面的「手动输入经纬度」</p>';
+    dropdown.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+  }
+
+  function hideCityOptions() {
+    var dropdown = $('#cityDropdown');
+    var input = $('#chartCityInput');
+    if (dropdown) dropdown.hidden = true;
+    if (input) input.setAttribute('aria-expanded', 'false');
+    state.cityActiveIndex = -1;
+  }
+
+  function highlightCityOption() {
+    var dropdown = $('#cityDropdown');
+    if (!dropdown) return;
+    var options = dropdown.querySelectorAll('.city-option');
+    for (var i = 0; i < options.length; i++) {
+      var active = i === state.cityActiveIndex;
+      options[i].classList.toggle('is-active', active);
+      options[i].setAttribute('aria-selected', active ? 'true' : 'false');
+      if (active) {
+        var optionTop = options[i].offsetTop;
+        if (optionTop < dropdown.scrollTop || optionTop + options[i].offsetHeight > dropdown.scrollTop + dropdown.clientHeight) {
+          dropdown.scrollTop = optionTop - dropdown.clientHeight / 2;
+        }
+      }
+    }
+  }
+
+  function selectCity(city) {
+    if (!city) return;
+    state.chartCity = city;
+    state.cityManual = false;
+    var input = $('#chartCityInput');
+    if (input) input.value = city.name;
+    hideCityOptions();
+    var manualBox = $('#chartManual');
+    if (manualBox) manualBox.hidden = true;
+    var manualBtn = $('#cityManualBtn');
+    if (manualBtn) manualBtn.hidden = false;
+    computeChartFromForm(true);
+  }
+
   function initChart() {
     var form = $('#chartForm');
-    var citySel = $('#chartCity');
-    if (!form || !citySel || !Astro) return;
+    var cityInput = $('#chartCityInput');
+    var dropdown = $('#cityDropdown');
+    if (!form || !cityInput || !dropdown || !Astro) return;
     state.chartReady = true;
-
-    citySel.innerHTML = Astro.CITIES.map(function (c, i) {
-      return '<option value="' + i + '">' + c.name + '</option>';
-    }).join('') + '<option value="-1">其他（手动输入经纬度）</option>';
 
     var dateInput = $('#chartDate');
     var today = getToday();
     if (dateInput) dateInput.value = dateKey(today);
 
-    citySel.addEventListener('change', function () {
-      var manual = citySel.value === '-1';
-      var box = $('#chartManual');
-      if (box) box.hidden = !manual;
-      if (!manual) computeChartFromForm(true);
+    var defaultCity = findCityByShort('北京') || getCityList()[0];
+    if (defaultCity) {
+      state.chartCity = defaultCity;
+      cityInput.value = defaultCity.name;
+    }
+
+    cityInput.addEventListener('input', function () {
+      state.cityManual = false;
+      var manualBox = $('#chartManual');
+      if (manualBox) manualBox.hidden = true;
+      var manualBtn = $('#cityManualBtn');
+      if (manualBtn) manualBtn.hidden = false;
+      renderCityOptions(cityInput.value);
     });
+    cityInput.addEventListener('focus', function () {
+      var selectedName = state.chartCity ? state.chartCity.name : '';
+      renderCityOptions(cityInput.value === selectedName ? '' : cityInput.value);
+    });
+    cityInput.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (dropdown.hidden) {
+          renderCityOptions(cityInput.value);
+          return;
+        }
+        var count = state.cityMatches.length;
+        if (!count) return;
+        var next = state.cityActiveIndex + (e.key === 'ArrowDown' ? 1 : -1);
+        if (next < 0) next = count - 1;
+        if (next >= count) next = 0;
+        state.cityActiveIndex = next;
+        highlightCityOption();
+      } else if (e.key === 'Enter') {
+        if (!dropdown.hidden && state.cityActiveIndex >= 0) {
+          e.preventDefault();
+          selectCity(state.cityMatches[state.cityActiveIndex]);
+        }
+      } else if (e.key === 'Escape') {
+        hideCityOptions();
+      }
+    });
+
+    dropdown.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    dropdown.addEventListener('click', function (e) {
+      var option = e.target.closest('[data-city-index]');
+      if (!option) return;
+      var city = state.cityMatches[parseInt(option.dataset.cityIndex, 10)];
+      if (city) selectCity(city);
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.city-field')) hideCityOptions();
+    });
+
+    var manualBtn = $('#cityManualBtn');
+    if (manualBtn) {
+      manualBtn.addEventListener('click', function () {
+        state.cityManual = true;
+        state.chartCity = null;
+        cityInput.value = '';
+        hideCityOptions();
+        var manualBox = $('#chartManual');
+        if (manualBox) manualBox.hidden = false;
+        manualBtn.hidden = true;
+        showToast('填好经纬度后点「排一张小星盘」✦');
+        cityInput.focus();
+      });
+    }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -1060,30 +1220,33 @@
     hour = clamp(hour, 0, 23);
     minute = clamp(minute, 0, 59);
 
-    var citySel = $('#chartCity');
-    var lon, lat, cityName;
-    if (citySel && citySel.value === '-1') {
+    var lon, lat, cityName, tzOffset;
+    if (state.cityManual) {
       lon = parseFloat($('#chartLon') ? $('#chartLon').value : '');
       lat = parseFloat($('#chartLat') ? $('#chartLat').value : '');
       cityName = '手动经纬度';
+      tzOffset = 8;
       if (isNaN(lon) || isNaN(lat)) return null;
       if (lon < -180 || lon > 180 || lat < -90 || lat > 90) return null;
     } else {
-      var index = citySel ? parseInt(citySel.value, 10) : 0;
-      var city = Astro.CITIES[index] || Astro.CITIES[0];
+      var city = state.chartCity;
+      if (!city) return null;
       lon = city.lon;
       lat = city.lat;
       cityName = city.name;
+      tzOffset = city.tz == null ? 8 : city.tz;
     }
 
+    var tzLabel = tzOffset === 8 ? '' : ' · UTC+' + tzOffset;
     return {
       birth: bd,
       hour: hour,
       minute: minute,
       lon: lon,
       lat: lat,
+      tzOffset: tzOffset,
       cityName: cityName,
-      label: bd.y + '.' + pad2(bd.m) + '.' + pad2(bd.d) + ' ' + pad2(hour) + ':' + pad2(minute) + ' · ' + cityName
+      label: bd.y + '.' + pad2(bd.m) + '.' + pad2(bd.d) + ' ' + pad2(hour) + ':' + pad2(minute) + ' · ' + cityName + tzLabel
     };
   }
 
@@ -1091,7 +1254,7 @@
     if (!Astro) return;
     var input = getChartInput();
     if (!input) {
-      if (!silent) showToast('先填一下完整的生日和出生地嘛～');
+      if (!silent) showToast('先选一个出生城市，填好生日和时间嘛～');
       return;
     }
 
@@ -1102,7 +1265,8 @@
       hour: input.hour,
       minute: input.minute,
       lon: input.lon,
-      lat: input.lat
+      lat: input.lat,
+      tzOffset: input.tzOffset
     });
 
     state.chart = chart;
@@ -1138,7 +1302,7 @@
     }).join('');
 
     info.innerHTML =
-      '<p class="chart-meta">' + label + ' · 按东八区时间估算</p>' +
+      '<p class="chart-meta">' + label + ' · 按出生地时区估算</p>' +
       '<div class="chart-cards">' +
         chartCard('日', '太阳星座', sunSign.name, chart.sun.deg, sunLine) +
         chartCard('月', '月亮星座', moonSign.name, chart.moon.deg, moonLine) +
