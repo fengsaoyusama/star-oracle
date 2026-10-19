@@ -1,4 +1,4 @@
-// 验证 GitHub Pages 线上站点
+﻿// 验证 GitHub Pages 线上站点
 const BASE = 'https://fengsaoyusama.github.io/star-oracle/';
 
 async function get(path) {
@@ -20,7 +20,8 @@ out.twitterImage = (html.match(/name="twitter:image" content="([^"]+)"/) || [])[
 out.siteUrl = (html.match(/siteUrl: '([^']+)'/) || [])[1];
 out.charset = html.includes('charset="utf-8"');
 out.hasAbsoluteOg = (out.ogImage || '').startsWith('https://');
-out.aboutDeployed = html.includes('已经部署在 GitHub Pages 上啦');
+out.aboutPublic = html.includes('关于星屿') && html.includes('使用小贴士');
+out.noDevCard = !html.includes('发布小贴士') && !html.includes('siteUrl');
 out.hasLoveMoney = html.includes('id="fortune"') && html.includes('id="lmGrid"');
 out.badge = html.includes('星屿 v1.1');
 out.titleV11 = (out.title || '').includes('爱情财运');
@@ -66,7 +67,8 @@ if (!(out.title || '').includes('星屿占卜馆')) problems.push('标题缺失'
 if (!out.hasAbsoluteOg) problems.push('og:image 不是绝对地址');
 if (out.ogImage !== 'https://fengsaoyusama.github.io/star-oracle/preview/og-cover.png') problems.push('og:image 地址不正确');
 if (out.siteUrl !== 'https://fengsaoyusama.github.io/star-oracle') problems.push('siteUrl 配置不正确');
-if (!out.aboutDeployed) problems.push('关于页仍显示旧的发布提示');
+if (!out.aboutPublic) problems.push('关于区仍是旧的访客文案');
+if (!out.noDevCard) problems.push('页面仍包含站长专用提示');
 if (!out.hasLoveMoney) problems.push('线上页面缺少爱情与财运板块');
 if (!out.badge) problems.push('线上版本徽标不是 v1.1');
 if (!out.titleV11) problems.push('标题未包含爱情财运');
